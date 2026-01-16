@@ -1,6 +1,17 @@
 import axios from "axios";
+import { prisma } from "@/lib/prisma";
 
 const OLLAMA_URL = process.env.OLLAMA_URL!;
+
+export interface SimilarBookmark {
+    id: string;
+    url: string;
+    title: string;
+    description: string | null;
+    similarity: number;
+    createdAt: Date;
+    updatedAt: Date;
+}
 
 export async function generateEmbedding(
     text: string,
@@ -56,4 +67,32 @@ export function cosineSimilarity(vecA: number[], vecB: number[]): number {
     }
 
     return dotProduct / (mA * mB);
+}
+
+export async function findSimilarBookmarks(
+    query: string,
+    userId: string,
+    limit: number = 5
+): Promise<SimilarBookmark[]> {
+    const queryEmbedding = await generateEmbedding(query);
+
+    const embeddingString = `[${queryEmbedding.join(',')}]`;
+
+    const results = await prisma.$queryRaw<SimilarBookmark[]>`
+        SELECT 
+            id,
+            url,
+            title,
+            description,
+            "createdAt",
+            "updatedAt",
+            1 - (embedding <=> ${embeddingString}::vector) as similarity
+        FROM "Bookmark"
+        WHERE "userId" = ${userId}
+        AND embedding IS NOT NULL
+        ORDER BY embedding <=> ${embeddingString}::vector
+        LIMIT ${limit}
+    `;
+
+    return results;
 }
