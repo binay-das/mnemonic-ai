@@ -1,9 +1,9 @@
 'use client'
 
-import Link from "next/link";
-import { useState } from "react";
+import React, { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Button, Input, Link, Divider } from "@nextui-org/react";
 
 export default function SignIn() {
     const [data, setData] = useState({
@@ -11,86 +11,110 @@ export default function SignIn() {
         password: ""
     });
     const router = useRouter();
+    const [isLoading, setIsLoading] = useState(false);
 
     const loginUser = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
         signIn("credentials", { ...data, redirect: false })
             .then((callback) => {
+                setIsLoading(false);
                 if (callback?.error) {
                     console.error("Invalid credentials");
                 }
 
                 if (callback?.ok && !callback?.error) {
-                    console.log("Logged in successfully!");
                     router.push('/');
                 }
             })
+            .catch(() => setIsLoading(false));
     }
 
     return (
-        <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-            <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-                <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-white">
-                    Sign in to your account
-                </h2>
+        <div className="flex h-screen w-full">
+            <div className="hidden lg:flex w-1/2 flex-col justify-center items-center bg-gradient-to-tr from-blue-600 to-violet-600 p-12 text-white relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/10"></div>
+                <div className="relative z-10 flex flex-col items-center text-center">
+                    <div className="mb-6 rounded-full bg-white/20 p-4 backdrop-blur-md">
+                        <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <h1 className="text-4xl font-bold mb-4">Welcome to Mnemonic AI</h1>
+                    <p className="text-lg text-white/80 max-w-md">
+                        Securely access your intelligent dashboard and manage your data with ease.
+                    </p>
+                </div>
+                <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-blue-500/30 blur-3xl"></div>
+                <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-violet-500/30 blur-3xl"></div>
             </div>
 
-            <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-                <form className="space-y-6" onSubmit={loginUser}>
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-medium leading-6 text-white">
-                            Email address
-                        </label>
-                        <div className="mt-2">
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                value={data.email}
-                                onChange={(e) => setData({ ...data, email: e.target.value })}
-                                className="block w-full rounded-md border-0 bg-white/5 py-1.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
-                            />
-                        </div>
+            <div className="flex w-full lg:w-1/2 items-center justify-center bg-background px-8">
+                <div className="w-full max-w-sm">
+                    <div className="text-center mb-8">
+                        <h2 className="text-2xl font-bold text-foreground">Sign In</h2>
+                        <p className="text-small text-default-500 mt-2">Enter your email and password to continue</p>
                     </div>
 
-                    <div>
-                        <div className="flex items-center justify-between">
-                            <label htmlFor="password" className="block text-sm font-medium leading-6 text-white">
-                                Password
-                            </label>
+                    <form className="flex flex-col gap-4" onSubmit={loginUser}>
+                        <Input
+                            label="Email"
+                            placeholder="Enter your email"
+                            type="email"
+                            variant="bordered"
+                            labelPlacement="outside"
+                            isRequired
+                            value={data.email}
+                            onValueChange={(value) => setData({ ...data, email: value })}
+                            classNames={{
+                                label: "text-default-600 font-medium",
+                                input: "text-foreground",
+                            }}
+                        />
+                        <Input
+                            label="Password"
+                            placeholder="Enter your password"
+                            type="password"
+                            variant="bordered"
+                            labelPlacement="outside"
+                            isRequired
+                            value={data.password}
+                            onValueChange={(value) => setData({ ...data, password: value })}
+                            classNames={{
+                                label: "text-default-600 font-medium",
+                                input: "text-foreground",
+                            }}
+                        />
+                        <div className="flex justify-between items-center px-1 py-2">
+                            <Link href="#" size="sm" className="text-default-500">
+                                Forgot password?
+                            </Link>
                         </div>
-                        <div className="mt-2">
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="current-password"
-                                required
-                                value={data.password}
-                                onChange={(e) => setData({ ...data, password: e.target.value })}
-                                className="block w-full rounded-md border-0 bg-white/5 py-1.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <button
+                        <Button
                             type="submit"
-                            className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                            color="primary"
+                            variant="shadow"
+                            isLoading={isLoading}
+                            fullWidth
+                            className="font-medium bg-gradient-to-tr from-blue-600 to-violet-600"
                         >
-                            Sign in
-                        </button>
-                    </div>
-                </form>
+                            Sign In
+                        </Button>
+                    </form>
 
-                <p className="mt-10 text-center text-sm text-gray-400">
-                    Not a member?{' '}
-                    <Link href="/signup" className="font-semibold leading-6 text-indigo-400 hover:text-indigo-300">
-                        Register here
-                    </Link>
-                </p>
+                    <div className="mt-8 flex items-center gap-4">
+                        <Divider className="flex-1" />
+                        <p className="text-tiny text-default-400 uppercase">OR</p>
+                        <Divider className="flex-1" />
+                    </div>
+
+                    <p className="mt-8 text-center text-small text-default-500">
+                        Don't have an account?{' '}
+                        <Link href="/signup" size="sm" className="font-semibold text-primary cursor-pointer">
+                            Create an account
+                        </Link>
+                    </p>
+                </div>
             </div>
         </div>
     )
