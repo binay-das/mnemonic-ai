@@ -4,13 +4,13 @@ import React, { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { AuthLayout } from "@/components/AuthLayout";
+import { AuthFormData, AuthLayout } from "@/components/AuthLayout";
 
 export default function SignUp() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    const registerUser = async (e: React.FormEvent, data: any) => {
+    const registerUser = async (e: React.FormEvent, data: AuthFormData) => {
         e.preventDefault();
         setIsLoading(true);
         try {

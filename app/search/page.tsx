@@ -3,9 +3,17 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
+type SearchResult = {
+    id: string;
+    title: string;
+    url: string;
+    description?: string;
+    similarity: number;
+};
+
 export default function SearchPage() {
     const [query, setQuery] = useState<string>('');
-    const [results, setResults] = useState<any[]>([]);
+    const [results, setResults] = useState<SearchResult[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
     const [hasSearched, setHasSearched] = useState<boolean>(false);
@@ -30,8 +38,8 @@ export default function SearchPage() {
             }
 
             setResults(data.results || []);
-        } catch (err: any) {
-            setError(err.message || 'Failed to search');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to search');
             setResults([]);
         } finally {
             setLoading(false);
@@ -39,29 +47,29 @@ export default function SearchPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-[#fafaf9] dark:bg-[#0a0a0a] py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto">
-                <div className="mb-12 text-center">
-                    <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-4 tracking-tight">
+                <div className="mb-10">
+                    <h1 className="text-3xl font-semibold tracking-tight text-foreground mb-2">
                         Semantic Search
                     </h1>
-                    <p className="text-lg text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-foreground/55">
                         Explore your bookmarks with intelligent vector search.
                     </p>
                 </div>
 
-                <form onSubmit={handleSearch} className="mb-10">
-                    <div className="relative flex items-center">
+                <form onSubmit={handleSearch} className="mb-8">
+                    <div className="flex items-center border border-[#e7e7e7] dark:border-[#2a2a2a]">
                         <input
                             type="text"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Enter your search query..."
-                            className="w-full px-5 py-4 text-lg bg-white dark:bg-zinc-900 border-2 border-gray-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 shadow-sm transition-colors duration-200"
+                            className="flex-1 px-4 py-3 text-sm bg-transparent text-foreground placeholder:text-foreground/30 focus:outline-none"
                         />
                         <button
                             type="submit"
-                            className="absolute right-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+                            className="px-5 py-3 text-sm font-medium bg-[#0d7a6b] hover:bg-[#0a6358] text-white transition-colors dark:bg-[#2dccc0] dark:text-[#0a0a0a] dark:hover:bg-[#5dd8ce]"
                         >
                             Search
                         </button>
@@ -70,36 +78,27 @@ export default function SearchPage() {
 
                 {loading && (
                     <div className="py-12 text-center">
-                        <div className="inline-block w-8 h-8 border-[3px] border-current border-t-transparent text-blue-600 rounded-full animate-spin" role="status" aria-label="loading">
+                        <div className="inline-block w-6 h-6 border-2 border-current border-t-transparent text-[#0d7a6b] dark:text-[#2dccc0] rounded-full animate-spin" role="status" aria-label="loading">
                         </div>
-                        <p className="mt-4 text-gray-500 dark:text-gray-400 font-medium">Searching embeddings...</p>
+                        <p className="mt-3 text-sm text-foreground/40 font-medium">Searching embeddings...</p>
                     </div>
                 )}
 
                 {error && (
-                    <div className="bg-red-50 dark:bg-red-900/10 border-l-4 border-red-500 p-4 mb-8 rounded-r-lg">
-                        <div className="flex">
-                            <div className="shrink-0">
-                                <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                            <div className="ml-3">
-                                <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
-                            </div>
-                        </div>
+                    <div className="border-l-2 border-red-500 pl-4 py-3 mb-6">
+                        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                     </div>
                 )}
 
                 {results.length > 0 && (
-                    <div className="space-y-4">
-                        <h2 className="text-sm font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-4">
-                            Search Results
+                    <div className="space-y-2">
+                        <h2 className="text-[11px] font-semibold text-foreground/30 uppercase tracking-[0.15em] mb-3">
+                            Results
                         </h2>
-                        {results.map((result: any) => (
+                        {results.map((result) => (
                             <div
                                 key={result.id}
-                                className="group bg-white dark:bg-zinc-900 rounded-xl p-6 border border-gray-200 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-blue-900 shadow-sm hover:shadow-md transition-all duration-200"
+                                className="group border border-[#e7e7e7] p-4 transition-colors hover:border-foreground/15 dark:border-[#2a2a2a] dark:hover:border-foreground/15"
                             >
                                 <div className="flex justify-between items-start gap-4">
                                     <div className="flex-1 min-w-0">
@@ -107,27 +106,28 @@ export default function SearchPage() {
                                             href={result.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="block text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
+                                            className="block text-base font-semibold text-foreground group-hover:text-[#0d7a6b] dark:group-hover:text-[#2dccc0] transition-colors"
                                         >
                                             {result.title}
                                         </a>
-                                        <div className="mt-1 flex items-center text-sm text-gray-500 dark:text-zinc-500">
-                                            <span className="truncate max-w-[300px]">{result.url}</span>
+                                        <div className="mt-1 text-xs text-foreground/30 truncate">
+                                            {result.url}
                                         </div>
                                     </div>
                                     <div className="shrink-0">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${result.similarity > 0.8
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                        <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium ${
+                                            result.similarity > 0.8
+                                                ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
                                             : result.similarity > 0.6
-                                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                                                : 'bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-400'
-                                            }`}>
+                                                ? 'bg-[#eef7f8] text-[#0a6358] dark:bg-[#11292d] dark:text-[#2dccc0]'
+                                                : 'bg-[#f5f5f4] text-foreground/50 dark:bg-[#1a1a1a] dark:text-foreground/50'
+                                        }`}>
                                             {(result.similarity * 100).toFixed(0)}% match
                                         </span>
                                     </div>
                                 </div>
                                 {result.description && (
-                                    <p className="mt-3 text-base text-gray-600 dark:text-zinc-400 line-clamp-2">
+                                    <p className="mt-2 text-sm text-foreground/50 line-clamp-2">
                                         {result.description}
                                     </p>
                                 )}
@@ -137,21 +137,21 @@ export default function SearchPage() {
                 )}
 
                 {!loading && !error && results.length === 0 && hasSearched && (
-                    <div className="text-center py-16 bg-white dark:bg-zinc-900 rounded-xl border border-dashed border-gray-300 dark:border-zinc-800">
-                        <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <div className="text-center py-16 border border-dashed border-[#e7e7e7] dark:border-[#2a2a2a]">
+                        <svg className="mx-auto h-10 w-10 text-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p className="mt-4 text-gray-500 dark:text-zinc-400 text-lg">No matches found for "{query}"</p>
-                        <p className="text-gray-400 dark:text-zinc-500 text-sm mt-2">Try different keywords or check your spelling.</p>
+                        <p className="mt-3 text-sm text-foreground/40">No matches found for "{query}"</p>
+                        <p className="text-xs text-foreground/30 mt-1">Try different keywords or check your spelling.</p>
                     </div>
                 )}
 
-                <div className="mt-12 text-center text-sm">
+                <div className="mt-10 text-center text-sm">
                     <Link
                         href="/"
-                        className="text-gray-500 hover:text-gray-900 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors inline-flex items-center gap-1.5"
+                        className="text-foreground/40 hover:text-foreground transition-colors inline-flex items-center gap-1"
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                         Back to Homepage
                     </Link>
                 </div>

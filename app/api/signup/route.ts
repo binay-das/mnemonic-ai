@@ -6,7 +6,7 @@ export async function POST(
     request: Request
 ) {
     try {
-        const body = await request.json();
+        const body = await request.json() as { email?: string; name?: string; password?: string };
         const { email, name, password } = body;
 
         if (!email || !name || !password) {
@@ -24,7 +24,7 @@ export async function POST(
         });
 
         return NextResponse.json(user);
-    } catch (error: any) {
+    } catch {
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

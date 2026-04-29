@@ -1,11 +1,17 @@
 "use client";
 
 import React from "react";
-import { Button, Input, Link, Divider } from "@nextui-org/react";
+import { Button, Input, Link } from "@nextui-org/react";
+
+export interface AuthFormData {
+    name: string;
+    email: string;
+    password: string;
+}
 
 interface AuthLayoutProps {
     mode: "signin" | "signup";
-    onSubmit: (e: React.FormEvent, data: any) => Promise<void>;
+    onSubmit: (e: React.FormEvent, data: AuthFormData) => Promise<void>;
     isLoading?: boolean;
     greetingTitle?: string;
     greetingDescription?: string;
@@ -48,41 +54,47 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
         : "Sign up for a new account to get started";
 
     return (
-        <div className="flex h-screen w-full">
-            <div className="hidden lg:flex w-1/2 flex-col justify-center items-center bg-gradient-to-tr from-blue-600 to-violet-600 p-12 text-white relative overflow-hidden">
-                <div className="absolute inset-0 bg-black/10"></div>
-                <div className="relative z-10 flex flex-col items-center text-center">
-                    <div className="mb-6 rounded-full bg-white/20 p-4 backdrop-blur-md">
+        <div className="flex min-h-screen w-full bg-[#fafaf9] dark:bg-[#0a0a0a]">
+            <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden border-r border-[#e7e7e7] bg-[#fafaf9] p-12 dark:border-[#2a2a2a] dark:bg-[#0a0a0a] lg:flex">
+                <div className="flex items-center justify-between text-xs text-foreground/40 uppercase tracking-[0.15em] dark:text-white/40">
+                    <span className="font-semibold text-foreground dark:text-white">Mnemonic AI</span>
+                    <span>Private bookmark memory</span>
+                </div>
+                <div className="relative z-10 flex flex-col">
+                    <div className="mb-6 flex h-10 w-10 items-center justify-center border border-foreground/10 dark:border-white/10">
                         {icon || (
                             <svg
-                                className="w-12 h-12 text-white"
+                                className="h-5 w-5 text-foreground/70 dark:text-white/70"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
+                                strokeWidth="1.5"
                             >
                                 {isSignin ? (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                 ) : (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                                 )}
                             </svg>
                         )}
                     </div>
-                    <h1 className="text-4xl font-bold mb-4">{greetingTitle || defaultGreetingTitle}</h1>
-                    <p className="text-lg text-white/80 max-w-md">
+                    <h1 className="mb-4 max-w-lg text-4xl font-semibold tracking-tight text-foreground dark:text-white">{greetingTitle || defaultGreetingTitle}</h1>
+                    <p className="max-w-md text-sm leading-7 text-foreground/50 dark:text-white/50">
                         {greetingDescription || defaultGreetingDesc}
                     </p>
                 </div>
-                <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-blue-500/30 blur-3xl"></div>
-                <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-violet-500/30 blur-3xl"></div>
+                <div className="grid grid-cols-3 gap-3 text-[11px] text-foreground/30 dark:text-white/30">
+                    <div className="border-t border-foreground/10 pt-3 dark:border-white/10">Semantic recall</div>
+                    <div className="border-t border-foreground/10 pt-3 dark:border-white/10">Fast capture</div>
+                    <div className="border-t border-foreground/10 pt-3 dark:border-white/10">Clean library</div>
+                </div>
             </div>
 
-            <div className="flex w-full lg:w-1/2 items-center justify-center bg-background px-8">
-                <div className="w-full max-w-sm">
-                    <div className="text-center mb-8">
-                        <h2 className="text-2xl font-bold text-foreground">{title || defaultTitle}</h2>
-                        <p className="text-small text-default-500 mt-2">{description || defaultDesc}</p>
+            <div className="flex w-full items-center justify-center px-6 py-12 lg:w-1/2">
+                <div className="w-full max-w-sm border border-[#e7e7e7] p-6 dark:border-[#2a2a2a] dark:bg-[#121212]">
+                    <div className="mb-8">
+                        <h2 className="text-2xl font-semibold tracking-tight text-foreground">{title || defaultTitle}</h2>
+                        <p className="mt-1.5 text-sm text-foreground/50">{description || defaultDesc}</p>
                     </div>
 
                     <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -97,8 +109,9 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                                 value={data.name}
                                 onValueChange={(value) => setData({ ...data, name: value })}
                                 classNames={{
-                                    label: "text-default-600 font-medium",
-                                    input: "text-foreground",
+                                    label: "text-foreground/50 text-xs uppercase tracking-[0.1em] font-medium",
+                                    input: "text-foreground text-sm",
+                                    inputWrapper: "border-[#e7e7e7] hover:border-foreground/20 focus-within:!border-[#0d7a6b] dark:border-[#2a2a2a] bg-transparent",
                                 }}
                             />
                         )}
@@ -112,8 +125,9 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                             value={data.email}
                             onValueChange={(value) => setData({ ...data, email: value })}
                             classNames={{
-                                label: "text-default-600 font-medium",
-                                input: "text-foreground",
+                                label: "text-foreground/50 text-xs uppercase tracking-[0.1em] font-medium",
+                                input: "text-foreground text-sm",
+                                inputWrapper: "border-[#e7e7e7] hover:border-foreground/20 focus-within:!border-[#0d7a6b] dark:border-[#2a2a2a] bg-transparent",
                             }}
                         />
                         <Input
@@ -126,45 +140,38 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                             value={data.password}
                             onValueChange={(value) => setData({ ...data, password: value })}
                             classNames={{
-                                label: "text-default-600 font-medium",
-                                input: "text-foreground",
+                                label: "text-foreground/50 text-xs uppercase tracking-[0.1em] font-medium",
+                                input: "text-foreground text-sm",
+                                inputWrapper: "border-[#e7e7e7] hover:border-foreground/20 focus-within:!border-[#0d7a6b] dark:border-[#2a2a2a] bg-transparent",
                             }}
                         />
-
-                        {isSignin && (
-                            <div className="flex justify-between items-center px-1 py-2">
-                                <Link href="#" size="sm" className="text-default-500">
-                                    Forgot password?
-                                </Link>
-                            </div>
-                        )}
 
                         <Button
                             type="submit"
                             color="primary"
-                            variant="shadow"
                             isLoading={isLoading}
                             fullWidth
-                            className="mt-2 font-medium bg-gradient-to-tr from-blue-600 to-violet-600"
+                            radius="none"
+                            className="mt-2 font-medium text-sm h-10"
                         >
                             {isSignin ? "Sign In" : "Sign Up"}
                         </Button>
                     </form>
 
                     <div className="mt-8 flex items-center gap-4">
-                        <Divider className="flex-1" />
-                        <p className="text-tiny text-default-400 uppercase">OR</p>
-                        <Divider className="flex-1" />
+                        <div className="flex-1 h-px bg-[#e7e7e7] dark:bg-[#2a2a2a]"></div>
+                        <p className="text-[11px] text-foreground/30 uppercase tracking-[0.15em]">OR</p>
+                        <div className="flex-1 h-px bg-[#e7e7e7] dark:bg-[#2a2a2a]"></div>
                     </div>
 
-                    <p className="mt-8 text-center text-small text-default-500">
+                    <p className="mt-6 text-center text-sm text-foreground/50">
                         {isSignin ? "Don't have an account? " : "Already have an account? "}
                         <Link
                             href={isSignin ? "/auth/signup" : "/auth/signin"}
                             size="sm"
-                            className="font-semibold text-primary cursor-pointer"
+                            className="font-medium text-[#0d7a6b] dark:text-[#2dccc0] cursor-pointer"
                         >
-                            {isSignin ? "Create an account" : "Log in here"}
+                            {isSignin ? "Create account" : "Sign in"}
                         </Link>
                     </p>
                 </div>
