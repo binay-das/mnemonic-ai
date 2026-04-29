@@ -8,7 +8,7 @@ export default async function BookmarksPage() {
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user) {
-        redirect('/signin');
+        redirect('/auth/signin');
     }
 
     const userId = (session.user as any).id;

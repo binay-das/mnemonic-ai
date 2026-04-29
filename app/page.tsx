@@ -61,7 +61,7 @@ export default function Home() {
                 <>
                   <Button
                     as={Link}
-                    href="/signin"
+                    href="/auth/signin"
                     size="lg"
                     color="primary"
                     className="font-semibold px-8"
@@ -70,7 +70,7 @@ export default function Home() {
                   </Button>
                   <Button
                     as={Link}
-                    href="/signup"
+                    href="/auth/signup"
                     size="lg"
                     variant="bordered"
                     color="primary"

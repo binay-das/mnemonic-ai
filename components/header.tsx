@@ -124,7 +124,7 @@ export function Header() {
                     ) : (
                         <Button
                             as={Link}
-                            href="/signin"
+                            href="/auth/signin"
                             color="primary"
                             size="sm"
                             radius="full"
