@@ -11,7 +11,6 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // @ts-ignore
         const userId = session.user.id;
 
         const user = await prisma.user.findUnique({
@@ -29,7 +28,7 @@ export async function GET() {
         }
 
         return NextResponse.json(user);
-    } catch (error) {
+    } catch {
         return NextResponse.json(
             { error: "Internal Server Error" },
             { status: 500 }
@@ -55,7 +54,6 @@ export async function PUT(req: Request) {
             );
         }
 
-        // @ts-ignore
         const userId = session.user.id;
 
         const existingUser = await prisma.user.findUnique({
@@ -86,7 +84,7 @@ export async function PUT(req: Request) {
         });
 
         return NextResponse.json(updatedUser);
-    } catch (error) {
+    } catch {
         return NextResponse.json(
             { error: "Internal Server Error" },
             { status: 500 }

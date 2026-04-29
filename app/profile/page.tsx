@@ -19,6 +19,7 @@ import {
 import axios, { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 
 interface UserProfile {
     name: string;
@@ -31,6 +32,7 @@ interface ApiErrorResponse {
 
 export default function ProfilePage() {
     const router = useRouter();
+    const { update } = useSession();
     const { isOpen, onOpen, onOpenChange } = useDisclosure();
     const [error, setError] = useState<string>("");
     const [saving, setSaving] = useState<boolean>(false);
@@ -66,6 +68,10 @@ export default function ProfilePage() {
                 email: editEmail,
             });
             setUser(response.data);
+            await update({ 
+                user: response.data 
+            });
+            
             toast.success("Profile updated successfully");
             onClose();
             router.refresh();

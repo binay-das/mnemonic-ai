@@ -38,7 +38,7 @@ export const authOptions: NextAuthOptions = {
                         email: user.email,
                         name: user.name
                     };
-                } catch (error) {
+                } catch {
                     return null;
                 }
             }
@@ -52,15 +52,23 @@ export const authOptions: NextAuthOptions = {
     },
     secret: process.env.NEXTAUTH_SECRET,
     callbacks: {
-        async jwt({ token, user }) {
+        async jwt({ token, user, trigger, session }) {
             if (user) {
                 token.id = user.id;
             }
+
+            if (trigger === "update" && session?.user) {
+                token.name = session.user.name;
+                token.email = session.user.email;
+            }
+
             return token;
         },
         async session({ session, token }) {
             if (session.user) {
-                (session.user as any).id = token.id;
+                session.user.id = token.id as string;
+                session.user.name = token.name;
+                session.user.email = token.email;
             }
             return session;
         }
