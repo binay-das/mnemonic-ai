@@ -4,6 +4,10 @@ import { getServerSession } from 'next-auth';
 import { generateEmbedding } from '@/lib/embeddings';
 import { NextRequest, NextResponse } from 'next/server';
 
+type SessionUserWithId = {
+    id: string;
+};
+
 export async function POST(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
@@ -27,7 +31,7 @@ export async function POST(request: NextRequest) {
         const metadata = `Title: ${title}. Description: ${description || ''}`.trim();
         const embedding = await generateEmbedding(metadata);
 
-        const userId = (session.user as any).id;
+        const userId = (session.user as SessionUserWithId).id;
 
         const bookmark = await prisma.bookmark.create({
             data: {
@@ -38,15 +42,13 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        console.log("bookmark: ", bookmark);
+        const embeddingString = `[${embedding.join(',')}]`;
 
-        const updateBookmarkEmbedding = await prisma.$executeRaw`
+        await prisma.$executeRaw`
             UPDATE "Bookmark"
-            SET embedding = ${embedding}::vector
+            SET embedding = ${embeddingString}::vector
             WHERE id = ${bookmark.id}
         `;
-
-        console.log("updateBookmarkEmbedding: ", updateBookmarkEmbedding);
 
         return NextResponse.json({
             success: true,
