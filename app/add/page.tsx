@@ -2,6 +2,33 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
+
+function validateBookmarkForm(url: string, title: string, description: string) {
+    if (!url.trim() || !title.trim()) {
+        return 'URL and title are required';
+    }
+
+    try {
+        const parsedUrl = new URL(url.trim());
+
+        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+            return 'URL must use http or https';
+        }
+    } catch {
+        return 'Enter a valid URL';
+    }
+
+    if (title.trim().length > 200) {
+        return 'Title must be 200 characters or fewer';
+    }
+
+    if (description.trim().length > 2000) {
+        return 'Description must be 2000 characters or fewer';
+    }
+
+    return '';
+}
 
 export default function AddBookmarkPage() {
     const [url, setUrl] = useState('');
@@ -14,6 +41,15 @@ export default function AddBookmarkPage() {
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        const validationError = validateBookmarkForm(url, title, description);
+
+        if (validationError) {
+            setMessage(validationError);
+            setIsError(true);
+            toast.error(validationError);
+            return;
+        }
+
         setLoading(true);
         setMessage('');
         setIsError(false);
@@ -43,13 +79,16 @@ export default function AddBookmarkPage() {
 
             setMessage('Bookmark added successfully!');
             setIsError(false);
+            toast.success('Bookmark added successfully');
             setUrl('');
             setTitle('');
             setDescription('');
             setTags('');
         } catch (err: unknown) {
-            setMessage(err instanceof Error ? err.message : 'Failed to add bookmark');
+            const errorMessage = err instanceof Error ? err.message : 'Failed to add bookmark';
+            setMessage(errorMessage);
             setIsError(true);
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }

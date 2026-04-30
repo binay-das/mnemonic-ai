@@ -152,6 +152,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                             type="submit"
                             color="primary"
                             isLoading={isLoading}
+                            isDisabled={isLoading}
                             fullWidth
                             radius="none"
                             className="mt-2 font-medium text-sm h-10"
@@ -160,7 +161,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                         </Button>
 
                         {errorMessage && (
-                            <p className="text-sm text-red-600 dark:text-red-400">
+                            <p className="text-sm text-red-600 dark:text-red-400" role="alert" aria-live="polite">
                                 {errorMessage}
                             </p>
                         )}

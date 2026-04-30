@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 type BookmarkTag = {
     id: string;
@@ -54,6 +55,32 @@ function getHostname(url: string) {
     }
 }
 
+function validateBookmarkForm(url: string, title: string, description: string) {
+    if (!url.trim() || !title.trim()) {
+        return 'URL and title are required';
+    }
+
+    try {
+        const parsedUrl = new URL(url.trim());
+
+        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+            return 'URL must use http or https';
+        }
+    } catch {
+        return 'Enter a valid URL';
+    }
+
+    if (title.trim().length > 200) {
+        return 'Title must be 200 characters or fewer';
+    }
+
+    if (description.trim().length > 2000) {
+        return 'Description must be 2000 characters or fewer';
+    }
+
+    return '';
+}
+
 export function BookmarksClient() {
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
     const [pagination, setPagination] = useState<Pagination>({
@@ -69,6 +96,7 @@ export function BookmarksClient() {
     const [saving, setSaving] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [error, setError] = useState('');
+    const [modalError, setModalError] = useState('');
     const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
     const [editForm, setEditForm] = useState<EditForm>({
         url: '',
@@ -106,7 +134,9 @@ export function BookmarksClient() {
                 totalPages: 0,
             });
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load bookmarks');
+            const message = err instanceof Error ? err.message : 'Failed to load bookmarks';
+            setError(message);
+            toast.error(message);
             setBookmarks([]);
         } finally {
             setLoading(false);
@@ -138,12 +168,13 @@ export function BookmarksClient() {
             tags: bookmark.tags.map((tag) => tag.name).join(', '),
         });
         setError('');
+        setModalError('');
     }
 
     function closeEdit() {
         setEditingBookmark(null);
         setSaving(false);
-        setError('');
+        setModalError('');
     }
 
     async function updateBookmark(e: React.FormEvent) {
@@ -153,8 +184,16 @@ export function BookmarksClient() {
             return;
         }
 
+        const validationError = validateBookmarkForm(editForm.url, editForm.title, editForm.description);
+
+        if (validationError) {
+            setModalError(validationError);
+            toast.error(validationError);
+            return;
+        }
+
         setSaving(true);
-        setError('');
+        setModalError('');
 
         try {
             const response = await fetch(`/api/bookmarks/${editingBookmark.id}`, {
@@ -181,10 +220,13 @@ export function BookmarksClient() {
                 )));
             }
 
+            toast.success('Bookmark updated successfully');
             closeEdit();
             fetchBookmarks();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to update bookmark');
+            const message = err instanceof Error ? err.message : 'Failed to update bookmark';
+            setModalError(message);
+            toast.error(message);
         } finally {
             setSaving(false);
         }
@@ -216,8 +258,12 @@ export function BookmarksClient() {
             } else {
                 fetchBookmarks();
             }
+
+            toast.success('Bookmark deleted successfully');
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to delete bookmark');
+            const message = err instanceof Error ? err.message : 'Failed to delete bookmark';
+            setError(message);
+            toast.error(message);
         } finally {
             setDeletingId(null);
         }
@@ -538,6 +584,12 @@ export function BookmarksClient() {
                                     className="w-full px-3 py-2.5 text-sm bg-transparent border border-[#e7e7e7] dark:border-[#2a2a2a] focus:outline-none focus:border-[#0d7a6b] text-foreground placeholder:text-foreground/30"
                                 />
                             </div>
+
+                            {modalError && (
+                                <p className="text-sm text-red-600 dark:text-red-400" role="alert" aria-live="polite">
+                                    {modalError}
+                                </p>
+                            )}
 
                             <div className="flex justify-end gap-2 pt-2">
                                 <button
