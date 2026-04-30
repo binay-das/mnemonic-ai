@@ -7,6 +7,7 @@ export default function AddBookmarkPage() {
     const [url, setUrl] = useState('');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [tags, setTags] = useState('');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [isError, setIsError] = useState(false);
@@ -23,7 +24,15 @@ export default function AddBookmarkPage() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ url, title, description }),
+                body: JSON.stringify({
+                    url,
+                    title,
+                    description,
+                    tags: tags
+                        .split(',')
+                        .map((tag) => tag.trim())
+                        .filter(Boolean),
+                }),
             });
 
             const data = await response.json();
@@ -37,6 +46,7 @@ export default function AddBookmarkPage() {
             setUrl('');
             setTitle('');
             setDescription('');
+            setTags('');
         } catch (err: unknown) {
             setMessage(err instanceof Error ? err.message : 'Failed to add bookmark');
             setIsError(true);
@@ -109,6 +119,23 @@ export default function AddBookmarkPage() {
                                 rows={3}
                                 placeholder="Add a brief description (optional)"
                                 className="w-full px-3 py-2.5 text-sm bg-transparent border border-[#e7e7e7] dark:border-[#2a2a2a] focus:outline-none focus:border-[#0d7a6b] text-foreground placeholder:text-foreground/30 transition-colors resize-none"
+                            />
+                        </div>
+
+                        <div>
+                            <label
+                                htmlFor="tags"
+                                className="block text-xs font-medium text-foreground/50 mb-1.5 uppercase tracking-[0.1em]"
+                            >
+                                Tags
+                            </label>
+                            <input
+                                id="tags"
+                                type="text"
+                                value={tags}
+                                onChange={(e) => setTags(e.target.value)}
+                                placeholder="research, docs, ideas"
+                                className="w-full px-3 py-2.5 text-sm bg-transparent border border-[#e7e7e7] dark:border-[#2a2a2a] focus:outline-none focus:border-[#0d7a6b] text-foreground placeholder:text-foreground/30 transition-colors"
                             />
                         </div>
 
