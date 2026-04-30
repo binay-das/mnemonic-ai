@@ -18,6 +18,7 @@ interface AuthLayoutProps {
     title?: string;
     description?: string;
     icon?: React.ReactNode;
+    errorMessage?: string;
 }
 
 export const AuthLayout: React.FC<AuthLayoutProps> = ({
@@ -29,6 +30,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
     title,
     description,
     icon,
+    errorMessage,
 }) => {
     const [data, setData] = React.useState({
         name: "",
@@ -156,6 +158,12 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                         >
                             {isSignin ? "Sign In" : "Sign Up"}
                         </Button>
+
+                        {errorMessage && (
+                            <p className="text-sm text-red-600 dark:text-red-400">
+                                {errorMessage}
+                            </p>
+                        )}
                     </form>
 
                     <div className="mt-8 flex items-center gap-4">
