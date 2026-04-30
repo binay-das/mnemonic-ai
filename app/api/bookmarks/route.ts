@@ -1,64 +1,100 @@
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { getServerSession } from 'next-auth';
-import { generateEmbedding } from '@/lib/embeddings';
+import type { Session } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
+import {
+    BookmarkPayload,
+    buildTagConnections,
+    isUniqueConstraintError,
+    parseBookmarkPagination,
+    updateBookmarkEmbedding,
+    validateBookmarkPayload,
+} from '@/lib/bookmarks';
 
 type SessionUserWithId = {
     id: string;
 };
 
-const MAX_TITLE_LENGTH = 200;
-const MAX_DESCRIPTION_LENGTH = 2000;
-const ALLOWED_URL_PROTOCOLS = new Set(['http:', 'https:']);
+function getUserId(session: Session | null) {
+    return (session?.user as SessionUserWithId | undefined)?.id;
+}
 
-type BookmarkPayload = {
-    url?: unknown;
-    title?: unknown;
-    description?: unknown;
-};
-
-function validateBookmarkPayload(body: BookmarkPayload) {
-    const rawUrl = typeof body.url === 'string' ? body.url.trim() : '';
-    const title = typeof body.title === 'string' ? body.title.trim() : '';
-    const description = typeof body.description === 'string' ? body.description.trim() : undefined;
-
-    if (!rawUrl || !title) {
-        return { error: 'url and title are required' };
-    }
-
-    let parsedUrl: URL;
-
+export async function GET(request: NextRequest) {
     try {
-        parsedUrl = new URL(rawUrl);
-    } catch {
-        return { error: 'Enter a valid URL' };
-    }
+        const session = await getServerSession(authOptions);
+        const userId = getUserId(session);
 
-    if (!ALLOWED_URL_PROTOCOLS.has(parsedUrl.protocol)) {
-        return { error: 'URL must use http or https' };
-    }
+        if (!userId) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
 
-    if (title.length > MAX_TITLE_LENGTH) {
-        return { error: `Title must be ${MAX_TITLE_LENGTH} characters or fewer` };
-    }
+        const searchParams = request.nextUrl.searchParams;
+        const { page, limit, skip } = parseBookmarkPagination(searchParams);
+        const tag = searchParams.get('tag')?.trim().toLowerCase();
 
-    if (description && description.length > MAX_DESCRIPTION_LENGTH) {
-        return { error: `Description must be ${MAX_DESCRIPTION_LENGTH} characters or fewer` };
-    }
+        const where = {
+            userId,
+            ...(tag
+                ? {
+                    tags: {
+                        some: {
+                            name: tag,
+                        },
+                    },
+                }
+                : {}),
+        };
 
-    return {
-        url: parsedUrl.toString(),
-        title,
-        description,
-    };
+        const [bookmarks, total] = await prisma.$transaction([
+            prisma.bookmark.findMany({
+                where,
+                include: {
+                    tags: {
+                        orderBy: {
+                            name: 'asc',
+                        },
+                    },
+                },
+                orderBy: {
+                    createdAt: 'desc',
+                },
+                skip,
+                take: limit,
+            }),
+            prisma.bookmark.count({
+                where,
+            }),
+        ]);
+
+        return NextResponse.json({
+            success: true,
+            bookmarks,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        });
+    } catch (error) {
+        console.error('Bookmark list error:', error);
+        return NextResponse.json(
+            { error: 'Failed to list bookmarks' },
+            { status: 500 }
+        );
+    }
 }
 
 export async function POST(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
+        const userId = getUserId(session);
 
-        if (!session || !session.user) {
+        if (!userId) {
             return NextResponse.json(
                 { error: 'Unauthorized' },
                 { status: 401 }
@@ -75,27 +111,45 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const metadata = `Title: ${validation.title}. Description: ${validation.description || ''}`.trim();
-        const embedding = await generateEmbedding(metadata);
+        const existingBookmark = await prisma.bookmark.findFirst({
+            where: {
+                userId,
+                url: validation.url,
+            },
+            select: {
+                id: true,
+            },
+        });
 
-        const userId = (session.user as SessionUserWithId).id;
+        if (existingBookmark) {
+            return NextResponse.json(
+                { error: 'Bookmark already exists for this URL' },
+                { status: 409 }
+            );
+        }
 
         const bookmark = await prisma.bookmark.create({
             data: {
                 url: validation.url,
                 title: validation.title,
                 description: validation.description,
-                userId
+                userId,
+                tags: validation.tags.length
+                    ? {
+                        connectOrCreate: buildTagConnections(validation.tags),
+                    }
+                    : undefined,
+            },
+            include: {
+                tags: {
+                    orderBy: {
+                        name: 'asc',
+                    },
+                },
             },
         });
 
-        const embeddingString = `[${embedding.join(',')}]`;
-
-        await prisma.$executeRaw`
-            UPDATE "Bookmark"
-            SET embedding = ${embeddingString}::vector
-            WHERE id = ${bookmark.id}
-        `;
+        await updateBookmarkEmbedding(bookmark.id, bookmark.title, bookmark.description);
 
         return NextResponse.json({
             success: true,
@@ -104,9 +158,16 @@ export async function POST(request: NextRequest) {
         }, { status: 201 });
 
     } catch (error) {
+        if (isUniqueConstraintError(error)) {
+            return NextResponse.json(
+                { error: 'Bookmark already exists for this URL' },
+                { status: 409 }
+            );
+        }
+
         console.error('Bookmark creation error:', error);
         return NextResponse.json(
-            { error: 'Failed to create bookmark', details: error instanceof Error ? error.message : 'Unknown error' },
+            { error: 'Failed to create bookmark' },
             { status: 500 }
         );
     }
