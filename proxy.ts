@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { withAuth } from "next-auth/middleware";
 
 export default withAuth(
-  function middleware() {
+  function middleware(_req: NextRequest) {
     return NextResponse.next();
   },
   {
