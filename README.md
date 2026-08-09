@@ -4,6 +4,8 @@ A modern semantic search engine for your bookmarks, powered by vector embeddings
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)](https://supabase.com/)
+[![Gemini](https://img.shields.io/badge/Google-Gemini-blue)](https://ai.google.dev/)
 
 ## Features
 
@@ -18,7 +20,8 @@ A modern semantic search engine for your bookmarks, powered by vector embeddings
 - **Framework**: Next.js 16 with App Router
 - **Language**: TypeScript 5
 - **Styling**: Tailwind CSS + NextUI
-- **Database**: PostgreSQL with Prisma ORM
+- **Database**: Supabase PostgreSQL with Prisma ORM & pgvector
+- **AI & Embeddings**: Google Gemini (`text-embedding-004`)
 - **Auth**: NextAuth.js
 - **Linting**: ESLint with Next.js config
 
@@ -27,7 +30,8 @@ A modern semantic search engine for your bookmarks, powered by vector embeddings
 ### Prerequisites
 
 - Node.js 20+
-- PostgreSQL database
+- Supabase PostgreSQL database with `pgvector` enabled
+- Google Gemini API Key
 - npm or your preferred package manager
 
 ### Installation
@@ -47,11 +51,11 @@ A modern semantic search engine for your bookmarks, powered by vector embeddings
    ```bash
    cp .env.example .env
    ```
-   Fill in your `DATABASE_URL` and `NEXTAUTH_SECRET`.
+   Fill in your Supabase `DATABASE_URL` (pooler), `DIRECT_URL` (direct connection), `GEMINI_API_KEY`, and `NEXTAUTH_SECRET`.
 
-4. Run Prisma migrations and generate client:
+4. Push schema migrations to your Supabase database:
    ```bash
-   npx prisma generate
+   npx prisma db push
    ```
 
 5. Start the development server:
@@ -76,10 +80,12 @@ Visit `http://localhost:3000` to see the app.
 ```
 mnemonic-ai/
 ├── app/                  # Next.js App Router
-│   ├── api/             # API routes
+│   ├── api/             # API routes (bookmarks, search, auth)
 │   ├── auth/            # Authentication pages
 │   └── search/          # Search page
-├── prisma/              # Database schema and migrations
+├── lib/                 # Core utilities (embeddings, auth, prisma)
+├── prisma/              # Database schema and config
+├── supabase/            # Supabase SQL migrations and RLS policies
 ├── proxy.ts             # Middleware configuration
 └── ...
 ```

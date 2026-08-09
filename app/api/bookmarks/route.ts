@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        await updateBookmarkEmbedding(bookmark.id, bookmark.title, bookmark.description);
+        await updateBookmarkEmbedding(bookmark.id, bookmark.title, bookmark.description, validation.tags);
 
         return NextResponse.json({
             success: true,

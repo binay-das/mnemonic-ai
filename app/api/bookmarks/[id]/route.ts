@@ -162,8 +162,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             },
         });
 
-        if (validation.shouldRegenerateEmbedding) {
-            await updateBookmarkEmbedding(bookmark.id, bookmark.title, bookmark.description);
+        if (validation.shouldRegenerateEmbedding || validation.tags !== undefined) {
+            const tagNames = bookmark.tags.map((t) => t.name);
+            await updateBookmarkEmbedding(bookmark.id, bookmark.title, bookmark.description, tagNames);
         }
 
         return NextResponse.json({

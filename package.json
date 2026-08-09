@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@google/genai": "^2.16.0",
     "@nextui-org/react": "^2.6.10",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",

@@ -1,7 +1,5 @@
-import axios from "axios";
+import { GoogleGenAI } from "@google/genai";
 import { prisma } from "@/lib/prisma";
-
-const OLLAMA_URL = process.env.OLLAMA_URL!;
 
 export interface SimilarBookmark {
     id: string;
@@ -15,31 +13,49 @@ export interface SimilarBookmark {
 
 export async function generateEmbedding(
     text: string,
-    model: string = 'nomic-embed-text:v1.5'
+    model: string = 'gemini-embedding-2',
+    taskType?: string
 ): Promise<number[]> {
-    try {
-        const response = await axios.post(`${OLLAMA_URL}/api/embeddings`, {
-            model,
-            prompt: text
-        });
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        throw new Error('GEMINI_API_KEY environment variable is not configured');
+    }
 
-        if (!response.data || !response.data.embedding) {
-            throw new Error('Invalid response format from Ollama API');
+    try {
+        const ai = new GoogleGenAI({ apiKey });
+        const config: { outputDimensionality: number; taskType?: string } = {
+            outputDimensionality: 768,
+        };
+        if (taskType) {
+            config.taskType = taskType;
         }
 
-        return response.data.embedding;
+        const response = await ai.models.embedContent({
+            model,
+            contents: text,
+            config,
+        });
+
+        const embeddingValues = response.embeddings?.[0]?.values;
+
+        if (!embeddingValues) {
+            throw new Error('Invalid response format from Gemini Embedding API');
+        }
+
+        return embeddingValues;
     } catch (error) {
-        console.error("Embedding Error:", error);
-        throw new Error(`Ollama failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        console.error("Gemini Embedding Error:", error);
+        throw new Error(`Gemini embedding failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 }
 
 export async function generateEmbeddings(
     texts: string[],
-    model: string = 'nomic-embed-text:v1.5'
+    model: string = 'gemini-embedding-2',
+    taskType?: string
 ): Promise<number[][]> {
     const embeddings = await Promise.all(
-        texts.map(text => generateEmbedding(text, model))
+        texts.map(text => generateEmbedding(text, model, taskType))
     );
     return embeddings;
 }
@@ -72,9 +88,9 @@ export function cosineSimilarity(vecA: number[], vecB: number[]): number {
 export async function findSimilarBookmarks(
     query: string,
     userId: string,
-    limit: number = 5
+    limit: number = 20
 ): Promise<SimilarBookmark[]> {
-    const queryEmbedding = await generateEmbedding(query);
+    const queryEmbedding = await generateEmbedding(query, 'gemini-embedding-2', 'RETRIEVAL_QUERY');
 
     const embeddingString = `[${queryEmbedding.join(',')}]`;
 

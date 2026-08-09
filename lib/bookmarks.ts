@@ -263,10 +263,16 @@ export function buildTagConnections(tags: string[]) {
     }));
 }
 
-export async function updateBookmarkEmbedding(bookmarkId: string, title: string, description: string | null) {
+export async function updateBookmarkEmbedding(
+    bookmarkId: string, 
+    title: string, 
+    description: string | null,
+    tags: string[] = []
+) {
     const { generateEmbedding } = await import('@/lib/embeddings');
-    const metadata = `Title: ${title}. Description: ${description || ''}`.trim();
-    const embedding = await generateEmbedding(metadata);
+    const tagText = tags.length > 0 ? `. Tags: ${tags.join(', ')}` : '';
+    const metadata = `Title: ${title}. Description: ${description || ''}${tagText}`.trim();
+    const embedding = await generateEmbedding(metadata, 'gemini-embedding-2', 'RETRIEVAL_DOCUMENT');
     const embeddingString = `[${embedding.join(',')}]`;
 
     await prisma.$executeRaw`
@@ -274,4 +280,19 @@ export async function updateBookmarkEmbedding(bookmarkId: string, title: string,
         SET embedding = ${embeddingString}::vector
         WHERE id = ${bookmarkId}
     `;
+}
+
+export async function reindexAllBookmarks() {
+    const bookmarks = await prisma.bookmark.findMany({
+        include: {
+            tags: true,
+        },
+    });
+
+    console.log(`Re-indexing ${bookmarks.length} bookmarks...`);
+    for (const b of bookmarks) {
+        const tagNames = b.tags.map((t) => t.name);
+        await updateBookmarkEmbedding(b.id, b.title, b.description, tagNames);
+    }
+    console.log('Finished re-indexing all bookmarks!');
 }
